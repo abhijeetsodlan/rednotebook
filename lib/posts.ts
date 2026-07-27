@@ -1,13 +1,6 @@
-﻿import { Prisma } from "@prisma/client";
-import { prisma } from "@/lib/db";
+﻿import { prisma } from "@/lib/db";
+import { isUnavailableDatabase } from "@/lib/db-status";
 import { excerptFromMarkdown, normalizeTags, readingTime } from "@/lib/markdown";
-
-function isUnavailableDatabase(error: unknown) {
-  if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    return ["P2021", "P2022", "P1001", "P1003"].includes(error.code);
-  }
-  return error instanceof Prisma.PrismaClientInitializationError || error instanceof Prisma.PrismaClientRustPanicError;
-}
 
 export type PostListItem = Awaited<ReturnType<typeof getPublishedPosts>>["posts"][number];
 
@@ -76,4 +69,5 @@ export async function getActiveNotice() {
     throw error;
   }
 }
+
 

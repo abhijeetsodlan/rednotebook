@@ -1,17 +1,34 @@
-export const dynamic = 'force-dynamic';
+﻿export const dynamic = 'force-dynamic';
 
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { LogoutButton, PostRowActions } from "@/components/AdminActions";
 import NoticeManager from "@/components/NoticeManager";
 import { prisma } from "@/lib/db";
+import { isUnavailableDatabase } from "@/lib/db-status";
 import { normalizeTags } from "@/lib/markdown";
 
+type AdminData = {
+  posts: Awaited<ReturnType<typeof prisma.post.findMany>>;
+  notice: Awaited<ReturnType<typeof prisma.notice.findFirst>>;
+  databaseUnavailable: boolean;
+};
+
+async function getAdminData(): Promise<AdminData> {
+  try {
+    const [posts, notice] = await Promise.all([
+      prisma.post.findMany({ orderBy: { updatedAt: "desc" } }),
+      prisma.notice.findFirst({ orderBy: { updatedAt: "desc" } })
+    ]);
+    return { posts, notice, databaseUnavailable: false };
+  } catch (error) {
+    if (isUnavailableDatabase(error)) return { posts: [], notice: null, databaseUnavailable: true };
+    throw error;
+  }
+}
+
 export default async function AdminPage() {
-  const [posts, notice] = await Promise.all([
-    prisma.post.findMany({ orderBy: { updatedAt: "desc" } }),
-    prisma.notice.findFirst({ orderBy: { updatedAt: "desc" } })
-  ]);
+  const { posts, notice, databaseUnavailable } = await getAdminData();
 
   return (
     <section className="mx-auto max-w-6xl px-4 py-10">
@@ -22,6 +39,16 @@ export default async function AdminPage() {
           <LogoutButton />
         </div>
       </div>
+
+      {databaseUnavailable ? (
+        <div className="mb-6 rounded-lg border border-redflag/40 bg-redflag/10 p-5 text-cream">
+          <h2 className="font-display text-2xl uppercase">Database unavailable</h2>
+          <p className="mt-2 text-sm leading-6 text-cream/70">
+            Netlify cannot use the local SQLite database reliably. The dashboard is loaded, but posts and notices cannot be read or saved until you connect a hosted database such as Neon, Supabase, or Railway PostgreSQL.
+          </p>
+        </div>
+      ) : null}
+
       <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
         <div className="overflow-hidden rounded-lg border border-white/10">
           <table className="w-full text-left text-sm">
@@ -46,4 +73,3 @@ export default async function AdminPage() {
     </section>
   );
 }
-
