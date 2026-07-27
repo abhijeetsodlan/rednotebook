@@ -1,0 +1,70 @@
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(200, 16, 46, .15), transparent 28rem),
+    linear-gradient(135deg, rgba(255,255,255,.025) 25%, transparent 25%) 0 0 / 6px 6px,
+    #0a0a0a;
+  color: #E8E6E3;
+}
+
+::selection {
+  background: #C8102E;
+  color: white;
+}
+
+.prose-rebel {
+  color: #e8e6e3;
+}
+
+.prose-rebel h2,
+.prose-rebel h3 {
+  color: #f5f1ea;
+  font-family: var(--font-display), serif;
+  scroll-margin-top: 6rem;
+}
+
+.prose-rebel a {
+  color: #ff4c65;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.prose-rebel blockquote {
+  border-left: 4px solid #C8102E;
+  background: rgba(200, 16, 46, .09);
+  margin: 2rem 0;
+  padding: 1rem 1.25rem;
+  color: #f5f1ea;
+}
+
+.prose-rebel code {
+  background: rgba(255,255,255,.08);
+  padding: .12rem .35rem;
+  border-radius: .25rem;
+}
+
+@media print {
+  nav, footer, aside, .no-print {
+    display: none !important;
+  }
+  body {
+    background: white;
+    color: black;
+  }
+  .prose-rebel {
+    color: black;
+  }
+}
+
+

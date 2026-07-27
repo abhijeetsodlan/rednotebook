@@ -1,0 +1,59 @@
+import { prisma } from "@/lib/db";
+import { excerptFromMarkdown, normalizeTags, readingTime } from "@/lib/markdown";
+
+export type PostListItem = Awaited<ReturnType<typeof getPublishedPosts>>["posts"][number];
+
+export async function getPublishedPosts({
+  query = "",
+  tag = "",
+  sort = "newest",
+  page = 1,
+  pageSize = 9
+}: {
+  query?: string;
+  tag?: string;
+  sort?: string;
+  page?: number;
+  pageSize?: number;
+} = {}) {
+  const where = {
+    status: "published",
+    ...(query
+      ? {
+          OR: [
+            { title: { contains: query } },
+            { excerpt: { contains: query } }
+          ]
+        }
+      : {})
+  };
+  const [rawPosts, total] = await Promise.all([
+    prisma.post.findMany({
+      where,
+      orderBy: { publishedAt: sort === "oldest" ? "asc" : "desc" },
+      skip: (page - 1) * pageSize,
+      take: pageSize
+    }),
+    prisma.post.count({ where })
+  ]);
+  const posts = rawPosts
+    .map((post) => ({
+      ...post,
+      tags: normalizeTags(post.tags),
+      excerpt: post.excerpt || excerptFromMarkdown(post.content),
+      readingMinutes: readingTime(post.content)
+    }))
+    .filter((post) => (tag ? post.tags.includes(tag) : true));
+  return { posts, total, page, pageSize };
+}
+
+export async function getActiveNotice() {
+  const notice = await prisma.notice.findFirst({
+    where: {
+      active: true,
+      OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }]
+    },
+    orderBy: { updatedAt: "desc" }
+  });
+  return notice;
+}
