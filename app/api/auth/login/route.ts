@@ -1,4 +1,4 @@
-import bcrypt from "bcryptjs";
+﻿import bcrypt from "bcryptjs";
 import { NextRequest, NextResponse } from "next/server";
 import { createSession, setSessionCookie } from "@/lib/auth";
 
@@ -22,14 +22,15 @@ export async function POST(request: NextRequest) {
   }
 
   const { username, password } = await request.json();
-  const expectedUser = process.env.ADMIN_USERNAME;
-  const hash = process.env.ADMIN_PASSWORD_HASH;
+  const submittedUser = typeof username === "string" ? username.trim() : "";
+  const expectedUser = process.env.ADMIN_USERNAME?.trim();
+  const hash = process.env.ADMIN_PASSWORD_HASH?.replaceAll("\\$", "$");
 
   if (!expectedUser || !hash) {
     return NextResponse.json({ error: "Admin credentials are not configured." }, { status: 500 });
   }
 
-  const validUser = username === expectedUser;
+  const validUser = submittedUser === expectedUser;
   const validPassword = typeof password === "string" && (await bcrypt.compare(password, hash));
 
   if (!validUser || !validPassword) {
@@ -37,6 +38,7 @@ export async function POST(request: NextRequest) {
   }
 
   const response = NextResponse.json({ ok: true });
-  setSessionCookie(response, await createSession(username));
+  setSessionCookie(response, await createSession(submittedUser));
   return response;
 }
+
