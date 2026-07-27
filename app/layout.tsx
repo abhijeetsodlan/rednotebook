@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Inter, Oswald } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     template: "%s | Red Notebook"
   },
   description: "A personal blog shaped by revolutionary poster aesthetics and thoughtful essays.",
+  icons: { icon: "/icon.jpg", shortcut: "/icon.jpg", apple: "/icon.jpg" },
   openGraph: {
     title: "Red Notebook",
     description: "Essays, notes, and reflections.",
@@ -31,3 +32,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </html>
   );
 }
+
