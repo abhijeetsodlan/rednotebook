@@ -6,11 +6,11 @@ import MarkdownView from "@/components/MarkdownView";
 import ReaderControls from "@/components/ReaderControls";
 import ShareButtons from "@/components/ShareButtons";
 import TableOfContents from "@/components/TableOfContents";
-import { prisma } from "@/lib/db";
 import { headingsFromMarkdown, normalizeTags, readingTime } from "@/lib/markdown";
+import { getAllPublishedPostLinks, getPostBySlug } from "@/lib/mongo-store";
 
 export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const post = await prisma.post.findFirst({ where: { slug: params.slug, status: "published" } });
+  const post = await getPostBySlug(params.slug);
   if (!post) return {};
   return {
     title: post.title,
@@ -20,9 +20,9 @@ export async function generateMetadata({ params }: { params: { slug: string } })
 }
 
 export default async function BlogDetailPage({ params }: { params: { slug: string } }) {
-  const post = await prisma.post.findFirst({ where: { slug: params.slug, status: "published" } });
+  const post = await getPostBySlug(params.slug);
   if (!post) notFound();
-  const siblings = await prisma.post.findMany({ where: { status: "published" }, orderBy: { publishedAt: "desc" }, select: { slug: true, title: true } });
+  const siblings = await getAllPublishedPostLinks();
   const index = siblings.findIndex((item) => item.slug === post.slug);
   const url = `/blogs/${post.slug}`;
   const tags = normalizeTags(post.tags);
@@ -85,3 +85,4 @@ export default async function BlogDetailPage({ params }: { params: { slug: strin
     </article>
   );
 }
+

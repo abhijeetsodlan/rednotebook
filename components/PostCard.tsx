@@ -1,6 +1,6 @@
 ﻿import Link from "next/link";
 import { CalendarDays, Clock } from "lucide-react";
-import type { PostListItem } from "@/lib/posts";
+import type { PostView as PostListItem } from "@/lib/mongo-store";
 
 export default function PostCard({ post }: { post: PostListItem }) {
   return (
@@ -31,4 +31,5 @@ export default function PostCard({ post }: { post: PostListItem }) {
     </article>
   );
 }
+
 

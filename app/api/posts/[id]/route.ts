@@ -1,50 +1,31 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
-import { serializeTags, slugify } from "@/lib/markdown";
+import { getAdminPostById, postPayload, postsCollection, type PostStatus } from "@/lib/mongo-store";
+import { toObjectId } from "@/lib/mongodb";
 
 export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await request.json();
-  const existing = await prisma.post.findUnique({ where: { id: params.id } });
+  const existing = await getAdminPostById(params.id);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const status = body.status === "published" ? "published" : "draft";
-  const post = await prisma.post.update({
-    where: { id: params.id },
-    data: {
-      title: String(body.title || existing.title),
-      slug: slugify(String(body.slug || existing.slug)),
-      excerpt: body.excerpt ? String(body.excerpt) : null,
-      content: String(body.content || ""),
-      coverImage: body.coverImage ? String(body.coverImage) : null,
-      coverAlt: body.coverAlt ? String(body.coverAlt) : null,
-      tags: serializeTags(body.tags),
-      status,
-      publishedAt: status === "published" ? existing.publishedAt || new Date() : null
-    }
-  });
-  return NextResponse.json(post);
+  const payload = postPayload(body, existing);
+  await (await postsCollection()).updateOne({ _id: toObjectId(params.id) }, { $set: payload });
+  return NextResponse.json({ ...existing, ...payload, id: params.id });
 }
 
 export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   const body = await request.json();
-  const status = body.status === "published" ? "published" : "draft";
-  const existing = await prisma.post.findUnique({ where: { id: params.id } });
+  const existing = await getAdminPostById(params.id);
   if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
-  const post = await prisma.post.update({
-    where: { id: params.id },
-    data: {
-      status,
-      publishedAt: status === "published" ? existing.publishedAt || new Date() : null
-    }
-  });
-  return NextResponse.json(post);
+  const status: PostStatus = body.status === "published" ? "published" : "draft";
+  const payload = { status, updatedAt: new Date(), publishedAt: status === "published" ? existing.publishedAt || new Date() : null };
+  await (await postsCollection()).updateOne({ _id: toObjectId(params.id) }, { $set: payload });
+  return NextResponse.json({ ...existing, ...payload, id: params.id });
 }
 
 export async function DELETE(_: NextRequest, { params }: { params: { id: string } }) {
   if (!(await requireAdmin())) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  await prisma.post.delete({ where: { id: params.id } });
+  await (await postsCollection()).deleteOne({ _id: toObjectId(params.id) });
   return NextResponse.json({ ok: true });
 }
-

@@ -1,8 +1,8 @@
-﻿export const dynamic = 'force-dynamic';
+export const dynamic = 'force-dynamic';
 
 import Link from "next/link";
 import NoticeBanner from "@/components/NoticeBanner";
-import { getActiveNotice } from "@/lib/posts";
+import { getActiveNotice } from "@/lib/mongo-store";
 
 export default async function HomePage() {
   const notice = await getActiveNotice();
@@ -52,17 +52,3 @@ export default async function HomePage() {
     </>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

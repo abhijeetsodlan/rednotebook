@@ -4,7 +4,7 @@ import Link from "next/link";
 import { CalendarDays, Clock, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 import PostCard from "@/components/PostCard";
-import type { PostListItem } from "@/lib/posts";
+import type { PostView as PostListItem } from "@/lib/mongo-store";
 
 export default function BlogsArchive({ posts }: { posts: PostListItem[] }) {
   const [query, setQuery] = useState("");
@@ -91,3 +91,4 @@ export default function BlogsArchive({ posts }: { posts: PostListItem[] }) {
     </section>
   );
 }
+
